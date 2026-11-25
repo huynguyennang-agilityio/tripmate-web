@@ -87,7 +87,7 @@ through a planning pull request and the product owner's approval.
 | `npm run typecheck` | `next typegen` then `tsc --noEmit` | `typecheck` |
 | `npm test` | Vitest once, jsdom, Testing Library | `test` |
 | `npm run build` | Static export to `out/` | `build` |
-| `npm run check:eol` | Fails when `git status --porcelain` shows any file; prints `git ls-files --eol` | `line-endings (windows-latest)`, `line-endings (macos-latest)` |
+| `npm run check:eol` | Fails when `git status --porcelain` shows any file, or `git ls-files --eol` shows a text file with a CRLF or mixed ending in the index or the working tree | `line-endings (windows-latest)`, `line-endings (macos-latest)` |
 
 Each check owns one kind of problem: `next build` skips type checking
 (`typescript.ignoreBuildErrors`) and does not lint, so a type error
