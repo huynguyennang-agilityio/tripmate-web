@@ -1,4 +1,5 @@
 export default function HomePage() {
+  const unused = 1;
   return (
     <main>
       <h1>TripMate</h1>
