@@ -14,8 +14,9 @@ new session; the lead session tells you which round you are.
 ## You read
 
 - The pull request's diff (`gh pr diff`, or `git diff main...HEAD`).
-  In round 2: only the diff since round 1 (`git diff <round 1 head>..HEAD`)
-  and the replies to the round 1 findings (`gh pr view --comments`,
+  In round 2: only the diff since round 1 (`git diff <round 1 head>..HEAD`,
+  where the round 1 head is the SHA named in the round 1 summary
+  comment) and the replies to the round 1 findings (`gh pr view --comments`,
   `gh api` for the review comments).
 - The card's task in `tasks/<epic>.md` of this repository (for example
   `tasks/EPIC-11.md`, section `WF2`): scope, what it leaves out, test
@@ -54,12 +55,17 @@ One summary comment per round gives:
 
 ### Round 1
 
-Post the findings. The code agent fixes each one and replies to it, or
-replies with the reason it does not apply.
+Post the findings. The summary comment names the pull request head SHA
+that was reviewed (`gh pr view <number> --json headRefOid`), as
+"Reviewed head: `<40-char SHA>`"; round 2 diffs from it. The code agent
+fixes each finding and replies to it, or replies with the reason it does
+not apply.
 
 ### Round 2
 
-Read the diff since round 1 and the replies. Fix nothing and ask for
+Read the round 1 head SHA from the "Reviewed head" line of the round 1
+summary comment (`gh pr view <number> --comments`), then the diff since
+it (`git diff <that SHA>..HEAD`) and the replies. Fix nothing and ask for
 no fix in code.
 
 - A **defect** asks the product owner to review the pull request: say
