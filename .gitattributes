@@ -1,0 +1,19 @@
+# Every text file is stored and checked out with LF on every OS, whatever
+# core.autocrlf is set to (EPIC-11 spec, section 4.3).
+* text=auto eol=lf
+
+# Binary files: never converted, never diffed as text.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.avif  binary
+*.bmp   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+*.pdf   binary
