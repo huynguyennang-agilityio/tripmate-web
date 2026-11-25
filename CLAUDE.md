@@ -17,10 +17,15 @@ here. Read them in place:
 - `../tripmate-docs/prd.md`: what the MVP must do.
 - `../tripmate-docs/docs/architecture.md` (section 11: repositories),
   `docs/api-design.md`, `docs/security.md`, `docs/test-strategy.md`.
-- `../tripmate-docs/docs/development-flow.md`: cards, risk levels, the
-  three agents (section 2.3), Definition of Done.
-- The spec of the epic being built: `../tripmate-docs/docs/specs/<epic>/spec.md`
-  (the Web platform is EPIC-11, sections 2.9 and 2.11).
+- `../tripmate-docs/docs/development-flow.md`: task files, cards, risk
+  levels, the four agents (section 2.3), what is written where
+  (section 2.4), Definition of Done.
+- The task of the card being built, in this repository:
+  `tasks/<epic>.md` (for example `tasks/EPIC-11.md`). It holds the
+  card's scope, risk level, test cases and manual checks.
+- The spec of the epic being built, for the behaviour and the design:
+  `../tripmate-docs/docs/specs/<epic>/spec.md` (the Web platform is
+  EPIC-11, sections 2.9, 2.11, 2.12 and 4.3).
 - `../tripmate-docs/docs/adr/0007-web-client-is-a-static-build.md`.
 
 When a document does not decide something, stop and ask the product
@@ -30,6 +35,38 @@ owner; do not guess.
 
 - Talk with the product owner in Vietnamese.
 - Write code, comments, commits, pull requests and documents in English.
+
+## How a card is built
+
+Each card runs four agents, each in a new session with no memory of
+the others; only files and the comments on the pull request pass
+between them. The roles are in `.claude/agents/`.
+
+1. Test agent (`test-agent.md`): one test per case of the task, a test
+   commit with the trailer `Agent: test`, each new test shown failing.
+2. Code agent (`code-agent.md`): code until every test passes, the
+   local checks, the decisions.
+3. Test-check agent (`test-check-agent.md`), locally: the tests against
+   the task, the code against the tests. Its report goes in the pull
+   request description; a test problem goes to a new test agent
+   session, a code problem to the code agent.
+4. Pull request, opened by the code agent when the report is clean and
+   the product owner says so. CI runs.
+5. Diff review, round 1 (`diff-review-agent.md`): findings on the pull
+   request at file and line, and a summary comment with the impact and
+   the risk level.
+6. The code agent fixes each round 1 finding, or replies with the
+   reason it does not apply, and pushes.
+7. Diff review, round 2, in a new session: the diff since round 1 and
+   the replies; nothing is fixed. A defect asks the product owner to
+   review; every other finding is a note.
+8. Notes: `tasks/<epic>-notes/<card>.md` (for example
+   `tasks/EPIC-11-notes/WF2.md`), one file per card, written by the
+   round 2 agent, committed by the code agent in the card's pull
+   request, and settled when the epic closes.
+
+A card never changes its task file `tasks/<epic>.md`; a correction goes
+through a planning pull request and the product owner's approval.
 
 ## Setup
 
@@ -61,10 +98,16 @@ them before opening a pull request.
 
 ```text
 tripmate-web/
-├── .claude/agents/        test-agent, code-agent, review-agent roles
+├── .claude/agents/        the four agent roles
+│   ├── test-agent.md
+│   ├── code-agent.md
+│   ├── test-check-agent.md
+│   └── diff-review-agent.md
 ├── .github/workflows/     ci.yml
 ├── scripts/               Node scripts shared by CI and every machine
 ├── src/app/               Next.js App Router pages and layouts
+├── tasks/                 <epic>.md task files (planning pull requests
+│                          only) and <epic>-notes/<card>.md notes files
 ├── tests/                 Vitest tests, mirroring src/ (tests/app/...)
 ├── next.config.ts         output: 'export'
 ├── eslint.config.mjs
