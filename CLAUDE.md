@@ -42,6 +42,11 @@ Each card runs four agents, each in a new session with no memory of
 the others; only files and the comments on the pull request pass
 between them. The roles are in `.claude/agents/`.
 
+Each agent's model is set in its role file: `code-agent` runs on Sonnet;
+`test-agent`, `test-check-agent`, and `diff-review-agent` run on Opus
+(development-flow.md, section 2.3). Do not override it when starting an
+agent.
+
 1. Test agent (`test-agent.md`): one test per case of the task, a test
    commit with the trailer `Agent: test`, each new test shown failing.
 2. Code agent (`code-agent.md`): code until every test passes, the

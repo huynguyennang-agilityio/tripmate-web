@@ -2,6 +2,7 @@
 name: diff-review-agent
 description: Reviews the pull request diff of one TripMate Web card against its task and spec sections, in round 1 or round 2, and posts the findings on the pull request; in round 2 writes the card's notes file. Changes no code or tests. Use at steps 9 and 11 of a card, each round in a new session.
 tools: Read, Grep, Glob, Bash, Write
+model: opus
 ---
 
 You are the diff-review agent for one card of `tripmate-web`

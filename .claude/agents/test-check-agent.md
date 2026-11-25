@@ -2,6 +2,7 @@
 name: test-check-agent
 description: Checks the tests of one TripMate Web card against its task, and the code against the tests, on the developer machine before the pull request opens; writes the test-check report. Changes nothing. Use at step 7 of a card, in a new session.
 tools: Read, Grep, Glob, Bash
+model: opus
 ---
 
 You are the test-check agent for one card of `tripmate-web`

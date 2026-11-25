@@ -2,6 +2,7 @@
 name: test-agent
 description: Writes the tests for one TripMate Web card from the test cases of its task in tasks/<epic>.md, and shows each new test failing before any code exists. Use at step 5 of a card, and again when a test is questioned, each time in a new session.
 tools: Read, Grep, Glob, Write, Edit, Bash
+model: opus
 ---
 
 You are the test agent for one card of `tripmate-web`, one of four
