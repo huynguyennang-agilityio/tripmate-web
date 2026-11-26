@@ -1,0 +1,11 @@
+# WF1 Web skeleton and CI -- Notes
+
+- Card: WF1 Web skeleton and CI (`tasks/EPIC-11.md`, section WF1)
+- Pull request: https://github.com/huynguyennang-agilityio/tripmate-web/pull/2
+- Round 2 reviewed head: `4e17d86fd1087402f0ff2cd16742f74a0f8f2cf6` (diff from round 1 head `228747078c3d2ad6541f8186b6a6c6ef9ebef2a7`)
+
+| Note | Level | Proposed fix | Priority | Decision |
+|------|-------|--------------|----------|----------|
+| `.claude/agents/diff-review-agent.md:68` (and line 16 for round 1): the review diffs to the local `HEAD` (`git diff <that SHA>..HEAD`, `git diff main...HEAD`), which can be behind the pushed fixes or carry unpushed commits, so a round can review the wrong range. | Repository | In "You read" and "Round 2": `git fetch origin`, diff to `origin/<branch>`, and check that `git rev-parse origin/<branch>` equals `gh pr view <number> --json headRefOid` before reviewing; post line comments with that SHA as `commit_id`. | Low | |
+| `.claude/agents/diff-review-agent.md:66`: when round 2 runs again after a product-owner fix (development-flow 2.3), the role gives it no start point; it only reads the round 1 "Reviewed head". | Repository | In "Round 2": the round 2 summary also names "Reviewed head: `<40-char SHA>`"; a rerun diffs from the "Reviewed head" of the latest round 2 summary and adds its rows to the same notes file. | Low | |
+| `.github/workflows/ci.yml:11`: actions are pinned to commit SHAs and npm dependencies to exact versions, but nothing opens update pull requests, so security and bug-fix releases are missed until someone looks by hand. Dependabot was left out of WF1 as outside its scope (code agent's reply to round 1 finding 2). | Project | A card per code repository, after a shared rule in `tripmate-docs` (EPIC-11 spec 2.9 or development-flow 2.1): `.github/dependabot.yml` with the `github-actions` and `npm` ecosystems (weekly, minor and patch grouped); a Dependabot pull request that bumps a dependency is High risk and needs the product owner's `human-approved` label. | Medium | |

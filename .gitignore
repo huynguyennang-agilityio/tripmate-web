@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Tests
+coverage/
+
+# Environment files: the repository is public, never commit one
+.env
+.env*
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Claude Code local settings
+.claude/settings.local.json
