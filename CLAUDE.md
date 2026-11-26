@@ -99,6 +99,15 @@ Each check owns one kind of problem: `next build` skips type checking
 fails only `typecheck` and a lint error fails only `lint`. Run all of
 them before opening a pull request.
 
+A Claude Code hook runs them for you. Before Claude runs `git push` or
+`gh pr create` in this repository, the `PreToolUse` hook in
+`.claude/settings.json` runs `check:eol`, `lint`, `typecheck`, `test`
+and `build` (`.claude/hooks/check-before-push.mjs`), and blocks the
+command when one fails, with the failing output. Fix the problem,
+commit, and run the command again; never work around the hook.
+Deleting a remote branch is not checked. CI stays the gate on `main`:
+the hook only catches problems before the push.
+
 ## Folder layout
 
 ```text
