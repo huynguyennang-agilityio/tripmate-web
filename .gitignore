@@ -26,3 +26,6 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# MSW service worker, copied by next.config.ts for the dev server in mock mode
+public/mockServiceWorker.js

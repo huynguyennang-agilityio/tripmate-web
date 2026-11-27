@@ -11,7 +11,7 @@ own. Every screen gets its data from the TripMate API in the browser
 
 | | |
 |---|---|
-| Status | Skeleton and CI in place (EPIC-11, card WF1). No feature screens yet. |
+| Status | Skeleton, CI, generated API client, mock mode, and messages in place (EPIC-11, cards WF1 and WF2). One test screen, `/health`; no feature screens yet. |
 | Product documents | [tripmate-docs](https://github.com/huynguyennang-agilityio/tripmate-docs) |
 | Rules for contributors and AI agents | [CLAUDE.md](CLAUDE.md) |
 | Tasks of this repository | [tasks/EPIC-11.md](tasks/EPIC-11.md) |
@@ -38,7 +38,7 @@ flowchart LR
         TR["translations/en, translations/vi"]
     end
     subgraph Web["tripmate-web"]
-        GEN["Generated at build time:<br/>API client, hooks, mock handlers,<br/>next-intl messages"]
+        GEN["Generated and committed:<br/>API client, hooks, mock handlers,<br/>next-intl messages"]
         APP["Screens<br/>Next.js App Router"]
         OUT["out/<br/>static HTML, JS, CSS"]
         GEN --> APP --> OUT
@@ -65,8 +65,8 @@ flowchart LR
 
 ### Inside the client
 
-This is the shape the foundation cards build. WF1 has built only the
-App Router skeleton; the rest comes with WF2.
+This is the shape the foundation cards build. WF1 built the App Router
+skeleton and WF2 the client, mock mode, and messages.
 
 ```mermaid
 flowchart TB
@@ -92,7 +92,7 @@ flowchart TB
 | API client and hooks | A typed client and TanStack Query hooks, generated with Orval from the pinned contracts version. The query cache holds server data, and WebSocket events invalidate the records they name. | WF2 |
 | Request headers | `X-Device-Id` on every request, kept across reloads. `Idempotency-Key` on creates: the same key for retries of one action, a new key for a new action. | WF2 |
 | Mock mode | MSW handlers generated with the client answer from the contract's examples. It is on when `NEXT_PUBLIC_API_MODE=mock` and in screen tests, and never in a production build. | WF2 |
-| Translations | `next-intl` messages in Vietnamese and English, generated from the pinned contracts version. A key that version does not have fails the build. | WF2 |
+| Translations | `next-intl` messages in Vietnamese and English, generated from the pinned contracts version. A key that version does not have is a type error and throws at render. | WF2 |
 | `platform` interface | Hides what differs inside Desktop (notifications, offline cache, keychain). On the plain Web it does nothing or uses browser features. | Not in a card yet |
 
 The full picture is in
@@ -113,6 +113,10 @@ Versions are exact in `package.json` and locked in
 | Runtime | Node.js | 24 LTS | `.nvmrc` is `24`; `engines` is `>=24 <25`, enforced by `engine-strict` in `.npmrc` |
 | Package manager | npm | 11, the one bundled with Node 24 | Install with `npm ci` |
 | Framework | Next.js | 16.4.6 | App Router, `output: "export"` |
+| API client and hooks | Orval 8.49.0, `@tanstack/react-query` 5.108.4 | | Generated into `src/api/generated/` from the pinned contracts version |
+| Mock mode | MSW | 2.15.0 | Handlers generated from the contract's examples. Not 3.x: its package has no `require` entry for `msw/browser`, which the WF2-7 test resolves. |
+| Translations | `next-intl` | 4.16.2 | Messages generated into `src/messages/` |
+| Contracts | `tripmate-contracts` | `contracts-v0.2.0` | npm git dependency on a tag; the lock file records the commit |
 | UI | React, React DOM | 19.3.1 | |
 | Language | TypeScript | 6.0.3 | `strict: true`. Not 7.x: `typescript-eslint` supports `<6.1.0`. |
 | Lint | ESLint | 9.39.5 | Flat config with `eslint-config-next` 16.4.6, `--max-warnings=0`. Not 10.x until `eslint-config-next` supports it. |
@@ -129,9 +133,6 @@ that adds them.
 
 | Area | Tool | Card |
 |------|------|------|
-| API client and hooks | Orval, TanStack Query | WF2 |
-| Mock mode | MSW | WF2 |
-| Translations | `next-intl` | WF2 |
 | End-to-end smoke set | Playwright | WF3 |
 
 ## Code structure
@@ -139,14 +140,20 @@ that adds them.
 ```text
 tripmate-web/
 ├── .claude/agents/          The four agent roles: test, code, test-check, diff review
-├── .github/workflows/
-│   └── ci.yml               The CI checks, required on main
+├── .github/
+│   ├── workflows/           ci.yml, flow.yml (flow checks), risk-gate.yml
+│   └── risk-paths.toml      Path list of the risk gate
 ├── scripts/
-│   └── check-line-endings.mjs   Fails on any CRLF or changed file (Node only)
+│   ├── check-line-endings.mjs   Fails on any CRLF or changed file (Node only)
+│   ├── check-contracts.mjs      Fails when the generated files differ from the pinned contracts
+│   ├── generate-contracts.mjs   Writes src/api/generated and src/messages
+│   └── lib/contracts.mjs
 ├── src/
-│   └── app/                 Next.js App Router
-│       ├── layout.tsx       Root layout
-│       └── page.tsx         Home page
+│   ├── app/                 Next.js App Router: layout, providers, home, /health test screen
+│   ├── api/                 client.ts (apiFetch, headers), mode.ts, generated/ (Orval, committed)
+│   ├── mocks/               MSW handlers, browser worker, Vitest setup file
+│   ├── messages/            en.json, vi.json (generated for next-intl)
+│   └── i18n/                Typed messages
 ├── tests/                   Vitest tests, mirroring src/
 │   └── app/
 │       └── page.test.tsx
@@ -155,7 +162,8 @@ tripmate-web/
 │   └── EPIC-11-notes/       Review notes, one file per card
 ├── .gitattributes           LF on every OS; images and fonts are binary
 ├── .nvmrc, .npmrc           Node 24, engine-strict
-├── next.config.ts           Static export
+├── next.config.ts           Static export; refuses a production build with mock mode
+├── orval.config.mjs         Orval generation from the pinned contract
 ├── tsconfig.json            TypeScript strict
 ├── eslint.config.mjs        ESLint flat config
 ├── vitest.config.mts        Vitest with jsdom
@@ -170,9 +178,10 @@ tripmate-web/
 | Every text file is LF (`.gitattributes`) | The work runs on Windows and macOS; a fresh checkout shows no changed file on either |
 | Nothing server-only: no `route.ts`, server actions, middleware, `headers()` or `cookies()` | The static export cannot run them |
 
-New folders, for the generated client and messages for example, come
-with the card that needs them, and this section is updated in that
-card.
+New folders come with the card that needs them, and this section is
+updated in that card. `src/api/generated/` and `src/messages/` are
+generated: change the pin and run `npm run generate:contracts`, never
+edit them by hand.
 
 ## Getting started
 
@@ -183,8 +192,18 @@ needed.
 git clone https://github.com/huynguyennang-agilityio/tripmate-web.git
 cd tripmate-web
 npm ci
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3000, API at NEXT_PUBLIC_API_URL (default http://localhost:8000)
 ```
+
+Mock mode answers from the contract's examples, with no backend:
+
+```sh
+NEXT_PUBLIC_API_MODE=mock npm run dev    # then open /health
+```
+
+On PowerShell: `$env:NEXT_PUBLIC_API_MODE="mock"; npm run dev`. A production
+build with that setting fails on purpose. `NEXT_PUBLIC_*` values are public;
+never commit a `.env` file.
 
 On Windows, no Git setting is needed: `.gitattributes` keeps every
 file LF whatever `core.autocrlf` is.
@@ -199,6 +218,7 @@ Run the same checks as CI before opening a pull request:
 | `npm run typecheck` | `next typegen`, then `tsc --noEmit` | `typecheck` |
 | `npm test` | Vitest once, in jsdom | `test` |
 | `npm run build` | Static export to `out/`; CI also checks that `out/index.html` exists | `build` |
+| `npm run check:contracts` | Regenerates the client and messages from the pinned contracts version and fails when they differ from the committed files | `check-contracts` |
 | `npm run check:eol` | Fails when the tree has any changed file, or any text file has a CRLF or mixed ending | `line-endings (windows-latest)`, `line-endings (macos-latest)` |
 
 - Each check owns one kind of problem. `next build` skips type checking
@@ -206,17 +226,17 @@ Run the same checks as CI before opening a pull request:
   error fails only `lint`.
 - CI runs on every pull request and on every push to `main`.
 - `main` is protected: every change goes through a pull request, and
-  all six checks above must pass.
-- Later cards add the checks that the generated client and messages
-  match the pinned contracts version, the flow checks (failing first,
-  test lock, mutation, risk gate), and the end-to-end smoke set.
+  all seven checks above, and the flow checks, must pass.
+- The flow checks are `flow / failing-first`, `flow / test-lock` and
+  `gate / risk-gate` (the risk gate needs the `human-approved` label for
+  a High change). A later card adds the end-to-end smoke set.
 
 ## Environments
 
 | Environment | Where | API |
 |-------------|-------|-----|
-| Local | `npm run dev` on `localhost:3000` | The local stack in Docker (`docker compose up` in `tripmate-backend`), or mock mode with `NEXT_PUBLIC_API_MODE=mock` (from WF2) |
-| CI | GitHub Actions | Mock mode for screen tests; the local stack in Docker for the smoke set (from WF3) |
+| Local | `npm run dev` on `localhost:3000` | The local stack in Docker (`docker compose up` in `tripmate-backend`), or mock mode with `NEXT_PUBLIC_API_MODE=mock` |
+| CI | GitHub Actions | Mock mode for screen tests (MSW server in `src/mocks/vitest.setup.ts`); the local stack in Docker for the smoke set (from WF3) |
 | Production | A Render static site that serves the join page for every `/join/*` path (from WF3) | The production API |
 
 A staging environment is added before the beta. Environment settings
@@ -226,7 +246,7 @@ are public `NEXT_PUBLIC_*` values only. Never commit a `.env` file.
 
 ```mermaid
 flowchart LR
-    WF1["WF1<br/>Skeleton and CI<br/>done"] --> WF2["WF2<br/>API client, mock mode,<br/>translations, flow checks"]
+    WF1["WF1<br/>Skeleton and CI<br/>done"] --> WF2["WF2<br/>API client, mock mode,<br/>translations, flow checks<br/>done"]
     CT2["CT2<br/>contract tags"] --> WF2
     WF2 --> WF3["WF3<br/>smoke set,<br/>production site"]
     F11["F11<br/>whole stack in Docker"] --> WF3

@@ -1,0 +1,132 @@
+# Path list of the risk gate (EPIC-11 spec, section 2.12; development-flow.md, section 2.1).
+#
+# A changed path's level is the highest level of the rules that match it. A path no rule matches
+# counts as High. The flow checks also treat this file, `.github/workflows/**`, every `CLAUDE.md`,
+# and `.claude/agents/**` as High, whatever it says.
+#
+# Globs are matched from the repository root: `*` stays in one folder, `**` crosses folders.
+
+[[rule]]
+glob = ".github/**"
+level = "High"
+reason = "CI, the flow checks, and this path list"
+
+[[rule]]
+glob = "scripts/**"
+level = "High"
+reason = "The checks and generators of this repository"
+
+[[rule]]
+glob = "**/CLAUDE.md"
+level = "High"
+reason = "Rules every agent follows"
+
+[[rule]]
+glob = ".claude/**"
+level = "High"
+reason = "Agent roles and settings"
+
+[[rule]]
+glob = "package.json"
+level = "High"
+reason = "Dependencies, the contracts pin, and scripts"
+
+[[rule]]
+glob = "package-lock.json"
+level = "High"
+reason = "Locked dependencies"
+
+[[rule]]
+glob = "next.config.ts"
+level = "High"
+reason = "Static export, the production mock guard"
+
+[[rule]]
+glob = "vitest.config.mts"
+level = "High"
+reason = "What every test runs with"
+
+[[rule]]
+glob = "eslint.config.mjs"
+level = "High"
+reason = "Lint rules"
+
+[[rule]]
+glob = "tsconfig.json"
+level = "High"
+reason = "Type checking rules"
+
+[[rule]]
+glob = "orval.config.mjs"
+level = "High"
+reason = "How the client is generated from the contract"
+
+[[rule]]
+glob = ".npmrc"
+level = "High"
+reason = "How dependencies install"
+
+[[rule]]
+glob = ".nvmrc"
+level = "High"
+reason = "The Node version of every machine and CI"
+
+[[rule]]
+glob = ".gitattributes"
+level = "High"
+reason = "Line endings the checks compare"
+
+[[rule]]
+glob = "src/mocks/**"
+level = "High"
+reason = "Mock mode: the handlers and the setup file decide what every screen test and the dev server answer"
+
+[[rule]]
+glob = "src/api/client.ts"
+level = "High"
+reason = "Every request's headers; EPIC-01 adds the access token and refresh here"
+
+[[rule]]
+glob = "src/api/mode.ts"
+level = "High"
+reason = "The one rule for mock mode"
+
+[[rule]]
+glob = "src/app/providers.tsx"
+level = "High"
+reason = "Holds the runtime gate that starts MSW"
+
+[[rule]]
+glob = "src/**"
+level = "Low"
+reason = "Web client code"
+
+[[rule]]
+glob = "src/api/generated/**"
+level = "Low"
+reason = "Generated from the pinned contract; the check:contracts job guards it, and moving the pin changes package.json (High)"
+
+[[rule]]
+glob = "src/messages/**"
+level = "Low"
+reason = "Generated from the pinned translations; the check:contracts job guards it"
+
+[[rule]]
+glob = "tests/**"
+level = "Low"
+reason = "Tests are locked by the test-lock check"
+
+[[rule]]
+glob = "tasks/**"
+level = "Low"
+reason = "Task files"
+
+[[rule]]
+glob = "README.md"
+level = "Low"
+reason = "Documentation"
+
+[[rule]]
+glob = ".gitignore"
+level = "Low"
+reason = "Ignored files"

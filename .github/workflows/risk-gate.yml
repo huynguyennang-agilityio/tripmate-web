@@ -1,0 +1,36 @@
+# The risk gate on every pull request to `main`: the check `gate / risk-gate`, required on `main`.
+# It is `pull_request_target`, so this file is the base branch's, which a pull request cannot edit;
+# the backend's risk-gate-check.yml explains why that is safe (the head is only fetched and
+# diffed, never checked out or run). The called workflow and the `flowchecks` code it runs are
+# pinned to the same full commit SHA of tripmate-backend as flow.yml.
+# `labeled` and `unlabeled` run it again when `human-approved` is added or removed (only the
+# product owner adds it); a push (`synchronize`) removes the label first.
+name: Risk gate
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  # A push has its own group, so a later `edited`, `labeled`, or `unlabeled` run never cancels the
+  # run that removes `human-approved`; a newer push still replaces an older one.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.action == 'synchronize' && 'push' || 'other' }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    # `pull-requests: write` only so that the called job `revoke-approval` can remove the label after
+    # a push; `checks: read` lets the called job `risk-gate` read the head commit's check suites.
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: read
+    uses: huynguyennang-agilityio/tripmate-backend/.github/workflows/risk-gate-check.yml@c20f515968c0db9bec621b296e70b63254c9f9a8
+    with:
+      rules-file: .github/risk-paths.toml
+      flowchecks-repository: huynguyennang-agilityio/tripmate-backend
+      flowchecks-ref: c20f515968c0db9bec621b296e70b63254c9f9a8

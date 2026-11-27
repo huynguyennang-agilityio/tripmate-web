@@ -1,0 +1,52 @@
+# Three of the four flow checks on every pull request to `main` (EPIC-11 spec, section 2.12):
+# `flow / failing-first` and `flow / test-lock` (`flow / mutation` is skipped here, so green). They
+# run the pull request's own tests, so they run on `pull_request`. The fourth, the risk gate, is
+# `gate / risk-gate` from `risk-gate.yml` (`pull_request_target`), which a pull request cannot
+# change. Require on `main`, with the checks of ci.yml: `flow / failing-first`, `flow / test-lock`,
+# `gate / risk-gate`.
+# The checks' code is the backend's `flowchecks` package, pinned to a full commit SHA of
+# tripmate-backend (the header of its flow-checks.yml explains why other repositories pin). The
+# commit has F15 (a test file of another language is run on its own) and F16 (the setup command
+# runs again in the worktree of each test commit, so `npx vitest run` finds that commit's
+# `node_modules`). Moving the pin is a normal pull request; it is High (`.github/**`).
+# `edited` runs the checks again when the description changes.
+#
+# Vitest tests are `tests/**/*.test.ts` and `.test.tsx`; failing-first runs each new one on its
+# own with `npx vitest run <file>`. The pattern has no braces, which the reusable workflow refuses.
+# The helpers under `tests/support/` match no test pattern, so they are not run alone.
+name: Flow
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  flow:
+    uses: huynguyennang-agilityio/tripmate-backend/.github/workflows/flow-checks.yml@c20f515968c0db9bec621b296e70b63254c9f9a8
+    with:
+      rules-file: .github/risk-paths.toml
+      test-file-pattern: tests/**/*.test.ts*
+      test-command: npx vitest run
+      # A file with no test makes Vitest exit 1 with an `Error: No test found in suite ...` (a file
+      # with `describe` only) or `Error: No test suite found in file ...` (an empty file) line, which
+      # would pass as "failing"; this turns that into an error of the run. It allows the colour
+      # codes Vitest prints when FORCE_COLOR is set. It must never match `Tests  no tests`, which a
+      # file that fails at load also prints.
+      no-test-pattern: '^(?:\x1b\[[0-9;]*m)*Error(?:\x1b\[[0-9;]*m)*: No test (?:found in suite|suite found in file)\b'
+      setup-command: |
+        set -euo pipefail
+        npm ci
+      node-version: "24"
+      run-mutation: false
+      databases: false
+      run-risk-gate: false
+      flowchecks-repository: huynguyennang-agilityio/tripmate-backend
+      flowchecks-ref: c20f515968c0db9bec621b296e70b63254c9f9a8

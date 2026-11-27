@@ -14,10 +14,14 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "build": "next build",
-    "check:eol": "node scripts/check-line-endings.mjs"
+    "check:eol": "node scripts/check-line-endings.mjs",
+    "generate:contracts": "node scripts/generate-contracts.mjs",
+    "check:contracts": "node scripts/check-contracts.mjs"
   },
   "dependencies": {
+    "@tanstack/react-query": "5.108.4",
     "next": "16.4.6",
+    "next-intl": "4.16.2",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
@@ -31,6 +35,9 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
     "jsdom": "31.0.1",
+    "msw": "2.15.0",
+    "orval": "8.49.0",
+    "tripmate-contracts": "git+https://github.com/huynguyennang-agilityio/tripmate-contracts.git#contracts-v0.2.0",
     "typescript": "6.0.3",
     "vitest": "5.1.1"
   }
