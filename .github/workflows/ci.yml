@@ -1,7 +1,8 @@
 name: CI
 
 # EPIC-11 spec, section 2.9: every pull request runs ESLint, TypeScript,
-# Vitest and the static build. The job names below are the check names
+# Vitest, the static build, and the generated client and messages against the
+# pinned contracts version. The job names below are the check names
 # marked required on `main`; do not rename them without changing the rule.
 on:
   pull_request:
@@ -79,6 +80,22 @@ jobs:
       - run: npm run build
       - name: Static export has index.html
         run: test -f out/index.html
+
+  # The generated client and messages match the pinned contracts version
+  # (tripmate-contracts, an npm git dependency). Offline once `npm ci` has run.
+  check-contracts:
+    name: check-contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check:contracts
 
   # WF1-3: a fresh checkout on Windows and on macOS shows no changed file.
   # The check runs right after checkout, before anything can touch the tree.
