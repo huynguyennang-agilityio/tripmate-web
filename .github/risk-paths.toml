@@ -82,6 +82,21 @@ level = "High"
 reason = "Mock mode: the handlers and the setup file decide what every screen test and the dev server answer"
 
 [[rule]]
+glob = "src/api/client.ts"
+level = "High"
+reason = "Every request's headers; EPIC-01 adds the access token and refresh here"
+
+[[rule]]
+glob = "src/api/mode.ts"
+level = "High"
+reason = "The one rule for mock mode"
+
+[[rule]]
+glob = "src/app/providers.tsx"
+level = "High"
+reason = "Holds the runtime gate that starts MSW"
+
+[[rule]]
 glob = "src/**"
 level = "Low"
 reason = "Web client code"

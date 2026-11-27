@@ -159,7 +159,9 @@ on `main`, with the CI checks above, are `flow / failing-first`,
   `vitest.config.mts`, `eslint.config.mjs`, `tsconfig.json`,
   `orval.config.mjs`, `.npmrc`, `.nvmrc`, `.gitattributes`) and
   `src/mocks/**` (the handlers and the setup file decide what every screen
-  test and the dev server answer).
+  test and the dev server answer), `src/api/client.ts` (every request's
+  headers; the access token comes here), `src/api/mode.ts` and
+  `src/app/providers.tsx` (the mock gate).
   Low: `src/**` (so also `src/api/generated/**` and `src/messages/**`, which
   the `check-contracts` job guards and a pin change reaches only through
   High files), `tests/**`, `tasks/**`, `README.md`, `.gitignore`. A path no
@@ -219,11 +221,24 @@ tripmate-web/
   One user action is one `newAction()`; send the same action again to retry
   it, call `newAction()` again for a new action. Sign-in and refresh take no
   action, so no key.
+- For a create, the action travels in the mutation call, not in the `request`
+  option of the generated hook: Orval closes over that option once per hook,
+  so an action made there is either new on every render (a retry gets a new
+  key) or kept for the whole screen (a second record reuses the first key).
+  Put it in the mutation variables, `useMutation({ mutationFn: ({ data,
+  action }) => createX(data, { action }) })`. Call `newAction()` in the event
+  handler of the user's action, once per action; every retry of that action
+  ("Try again", TanStack's `retry`) reuses the same variables. The first
+  create (EPIC-01) makes the generated hooks follow this and adds its test;
+  WF2-4 and WF2-5 call `apiFetch` directly and do not cover the hook path.
 - Texts come from `next-intl` messages (`useTranslations`); a key the pinned
   contracts version does not have is a type error and throws at render,
   never shows as text.
-- MSW is loaded only behind `process.env.NODE_ENV === "development"` (or in
-  Vitest); never import `src/mocks/` from application code.
+- MSW is loaded only behind `process.env.NODE_ENV === "development" &&
+  isMockMode()` (`src/api/mode.ts`), with the `NODE_ENV` test first so the
+  import stays dead code in a production build; in Vitest through
+  `src/mocks/vitest.setup.ts`. Never import `src/mocks/` from application
+  code.
 - No secret ever lives in this client; the repository is public. Never
   commit a `.env` file, a token, a key or a password.
 - TypeScript `strict`; no `any` unless a comment says why.

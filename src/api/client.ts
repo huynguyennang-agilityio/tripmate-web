@@ -10,6 +10,9 @@
 //   `newAction()` again and gets a new key. A `POST` with no action (sign-in,
 //   refresh) carries no key.
 
+// The error body of api-design.md, section 4.1, as the pinned contract has it.
+import type { ErrorResponse } from "./generated/model";
+
 const DEVICE_ID_STORAGE_KEY = "tripmate.deviceId";
 const DEFAULT_API_URL = "http://localhost:8000";
 
@@ -29,16 +32,6 @@ export type ApiOptions = {
   action?: ApiAction;
 };
 
-/** The error body of api-design.md, section 4.1. */
-export type ApiErrorBody = {
-  error: {
-    code: string;
-    params: Record<string, unknown>;
-    fields: { field: string; code: string }[] | null;
-    requestId: string;
-  };
-};
-
 /** Thrown for every answer that is not 2xx; `code` is the error code of the body. */
 export class ApiError extends Error {
   readonly status: number;
@@ -47,7 +40,7 @@ export class ApiError extends Error {
   readonly requestId: string | undefined;
 
   constructor(status: number, body: unknown, requestId: string | undefined) {
-    const code = (body as Partial<ApiErrorBody> | null)?.error?.code;
+    const code = (body as Partial<ErrorResponse> | null)?.error?.code;
     super(code ?? `Request failed with status ${status}`);
     this.name = "ApiError";
     this.status = status;
@@ -92,9 +85,13 @@ export function newAction(): ApiAction {
   return { idempotencyKey: uuid() };
 }
 
+/** The origin of the API, from `NEXT_PUBLIC_API_URL` (no trailing slash). */
+export function apiBaseUrl(): string {
+  return (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, "");
+}
+
 function apiUrl(path: string, params: ApiRequest["params"]): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, "");
-  const url = new URL(`${base}${path}`);
+  const url = new URL(`${apiBaseUrl()}${path}`);
   for (const [name, value] of Object.entries(params ?? {})) {
     if (value === undefined || value === null) continue;
     for (const item of Array.isArray(value) ? value : [value]) {
