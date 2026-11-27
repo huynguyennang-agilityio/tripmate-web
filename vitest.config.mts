@@ -6,5 +6,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: ["tests/**/*.test.{ts,tsx}"],
+    // Mock mode in every run (MSW server with the generated handlers).
+    setupFiles: ["src/mocks/vitest.setup.ts"],
   },
 });
