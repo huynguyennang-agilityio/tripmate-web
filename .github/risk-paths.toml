@@ -77,9 +77,9 @@ level = "High"
 reason = "Line endings the checks compare"
 
 [[rule]]
-glob = "src/mocks/vitest.setup.ts"
+glob = "src/mocks/**"
 level = "High"
-reason = "Mock mode of every screen test; named in vitest.config.mts"
+reason = "Mock mode: the handlers and the setup file decide what every screen test and the dev server answer"
 
 [[rule]]
 glob = "src/**"

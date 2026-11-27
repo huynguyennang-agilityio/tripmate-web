@@ -100,8 +100,10 @@ The pinned contracts version is the npm git dependency
 `tripmate-contracts` in `package.json` (a tag, for example
 `contracts-v0.2.0`); `package-lock.json` records its commit. To move the
 pin: change the tag with `npm install --save-dev --save-exact`, keep the
-`git+https://` form in both files (CI has no SSH key; npm rewrites it to
-`git+ssh://`), run `npm run generate:contracts`, and commit the lock file
+`git+https://` form in both files (npm rewrites it to `github:` and
+`git+ssh://`; the `https` form keeps the lock's URL stable and readable and
+needs no SSH, though npm 11 also fetches this public repository over https
+from a `git+ssh` entry), run `npm run generate:contracts`, and commit the lock file
 and the generated files together. Never edit `src/api/generated/` or
 `src/messages/` by hand.
 
@@ -156,7 +158,8 @@ on `main`, with the CI checks above, are `flow / failing-first`,
   `package-lock.json`, the config files (`next.config.ts`,
   `vitest.config.mts`, `eslint.config.mjs`, `tsconfig.json`,
   `orval.config.mjs`, `.npmrc`, `.nvmrc`, `.gitattributes`) and
-  `src/mocks/vitest.setup.ts` (it decides what every test runs against).
+  `src/mocks/**` (the handlers and the setup file decide what every screen
+  test and the dev server answer).
   Low: `src/**` (so also `src/api/generated/**` and `src/messages/**`, which
   the `check-contracts` job guards and a pin change reaches only through
   High files), `tests/**`, `tasks/**`, `README.md`, `.gitignore`. A path no

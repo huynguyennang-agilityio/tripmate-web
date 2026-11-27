@@ -4,19 +4,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { isMockMode } from "../api/mode";
 import { messages, type Locale } from "../i18n/messages";
 
 // The MSW service worker runs in the browser of the dev server only. Screen
 // tests (NODE_ENV "test") answer through the MSW server of the Vitest setup
 // file, and a production build never mocks. The `NODE_ENV` test is inlined by
 // the build, so the dynamic import below, and MSW with it, is left out of a
-// production bundle. The server and the browser read the same two variables,
-// so the first render is the same on both.
-const usesBrowserWorker = () =>
-  process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_API_MODE === "mock";
+// production bundle. `isMockMode()` (src/api/mode.ts) is the one rule for mock
+// mode; the server and the browser evaluate the same two variables, so the
+// first render is the same on both.
+const usesBrowserWorker = () => process.env.NODE_ENV === "development" && isMockMode();
 
 async function enableMocking(): Promise<void> {
-  if (process.env.NODE_ENV === "development" && usesBrowserWorker()) {
+  if (process.env.NODE_ENV === "development" && isMockMode()) {
     const { startMockWorker } = await import("../mocks/browser");
     await startMockWorker();
   }
